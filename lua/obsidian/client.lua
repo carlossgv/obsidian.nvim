@@ -462,6 +462,10 @@ end
 ---@param opts { search: obsidian.SearchOpts|?, notes: obsidian.note.LoadOpts|? }|?
 Client.find_notes_async = function(self, term, callback, opts)
   opts = opts or {}
+  opts.notes = opts.notes or {}
+  if not opts.notes.max_lines then
+    opts.notes.max_lines = self.opts.search_max_lines
+  end
 
   local next_path = self:_search_iter_async(term, opts.search)
   local executor = AsyncExecutor.new()
@@ -606,6 +610,10 @@ end
 ---@return obsidian.Note|?
 Client.resolve_note_async = function(self, query, callback, opts)
   opts = opts or {}
+  opts.notes = opts.notes or {}
+  if not opts.notes.max_lines then
+    opts.notes.max_lines = self.opts.search_max_lines
+  end
 
   -- Autocompletion for command args will have this format.
   local note_path, count = string.gsub(query, "^.*  ", "")
@@ -803,6 +811,7 @@ Client.resolve_link_async = function(self, link, callback)
   local load_opts = {
     collect_anchor_links = anchor_link and true or false,
     collect_blocks = block_link and true or false,
+    max_lines = self.opts.search_max_lines,
   }
 
   -- Assume 'location' is current buffer path if empty, like for TOCs.
@@ -864,6 +873,15 @@ Client.follow_link_async = function(self, link, opts)
       if res.note ~= nil then
         -- Go to resolved note.
         return self:open_note(res.note, { line = res.line, col = res.col, open_strategy = opts.open_strategy })
+      end
+
+      if util.is_img(res.location) then
+        if self.opts.follow_img_func ~= nil then
+          self.opts.follow_img_func(res.location)
+        else
+          log.warn "This looks like an image path. You can customize the behavior of images with the 'follow_img_func' option."
+        end
+        return
       end
 
       if res.link_type == search.RefTypes.Wiki or res.link_type == search.RefTypes.WikiWithAlias then
@@ -986,6 +1004,10 @@ Client.current_note = function(self, bufnr, opts)
     return nil
   end
 
+  opts = opts or {}
+  if not opts.max_lines then
+    opts.max_lines = self.opts.search_max_lines
+  end
   return Note.from_buffer(bufnr, opts)
 end
 
@@ -1086,7 +1108,7 @@ Client.find_tags_async = function(self, term, callback, opts)
   ---@param path obsidian.Path
   ---@return { [1]: obsidian.Note, [2]: {[1]: integer, [2]: integer}[] }
   local load_note = function(path)
-    local note, contents = Note.from_file_with_contents_async(path, { max_lines = self.opts.search_max_lines or 1000 })
+    local note, contents = Note.from_file_with_contents_async(path, { max_lines = self.opts.search_max_lines })
     return { note, search.find_code_blocks(contents) }
   end
 
@@ -1288,7 +1310,8 @@ Client.find_backlinks_async = function(self, note, callback, opts)
 
   -- Prepare search terms.
   local search_terms = {}
-  for raw_ref in iter { tostring(note.id), note:fname(), self:vault_relative_path(note.path) } do
+  local note_path = Path.new(note.path)
+  for raw_ref in iter { tostring(note.id), note_path.name, note_path.stem, self:vault_relative_path(note.path) } do
     for ref in
       iter(util.tbl_unique {
         raw_ref,
@@ -1347,7 +1370,11 @@ Client.find_backlinks_async = function(self, note, callback, opts)
   end
 
   ---@type obsidian.note.LoadOpts
-  local load_opts = { collect_anchor_links = opts.anchor ~= nil, collect_blocks = opts.block ~= nil }
+  local load_opts = {
+    collect_anchor_links = opts.anchor ~= nil,
+    collect_blocks = opts.block ~= nil,
+    max_lines = self.opts.search_max_lines,
+  }
 
   ---@param match MatchData
   local function on_match(match)

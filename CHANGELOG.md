@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added `opts.follow_img_func` option for customizing how to handle image paths.
+- Added better handling for undefined template fields, which will now be prompted for.
+
+### Changed
+
+- Renamed `opts.image_name_func` to `opts.attachments.img_name_func`.
+
+### Fixed
+
+- Fixed an edge case with collecting backlinks.
+- Fixed typo in `ObsidianPasteImg`'s command description
+- Fixed the case when `opts.attachments` is `nil`.
+
+## [v3.9.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.9.0) - 2024-07-11
+
+### Added
+
+- Added `:ObsidianTOC` command for loading the table of contents of the current note into a picker list.
+- Added `:ObsidianNewFromTemplate` command. This command creates a new note from a template.
+
+### Fixed
+
+- Fixed bug where `opts.search_max_lines` was not propagated through some client methods.
+
+## [v3.8.1](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.1) - 2024-06-26
+
+### Fixed
+
+- Removed duplicate suggestions in completion of references.
+
 ## [v3.8.0](https://github.com/epwalsh/obsidian.nvim/releases/tag/v3.8.0) - 2024-06-21
 
 ### Added

@@ -14,6 +14,7 @@ local command_lookups = {
   ObsidianSearch = "obsidian.commands.search",
   ObsidianTags = "obsidian.commands.tags",
   ObsidianTemplate = "obsidian.commands.template",
+  ObsidianNewFromTemplate = "obsidian.commands.new_from_template",
   ObsidianQuickSwitch = "obsidian.commands.quick_switch",
   ObsidianLinkNew = "obsidian.commands.link_new",
   ObsidianLink = "obsidian.commands.link",
@@ -24,6 +25,7 @@ local command_lookups = {
   ObsidianPasteImg = "obsidian.commands.paste_img",
   ObsidianExtractNote = "obsidian.commands.extract_note",
   ObsidianDebug = "obsidian.commands.debug",
+  ObsidianTOC = "obsidian.commands.toc",
 }
 
 local M = setmetatable({
@@ -151,6 +153,8 @@ M.register("ObsidianSearch", { opts = { nargs = "?", desc = "Search vault" } })
 
 M.register("ObsidianTemplate", { opts = { nargs = "?", desc = "Insert a template" } })
 
+M.register("ObsidianNewFromTemplate", { opts = { nargs = "?", desc = "Create a new note from a template" } })
+
 M.register("ObsidianQuickSwitch", { opts = { nargs = "?", desc = "Switch notes" } })
 
 M.register("ObsidianLinkNew", { opts = { nargs = "?", range = true, desc = "Link selected text to a new note" } })
@@ -175,7 +179,7 @@ M.register(
 
 M.register(
   "ObsidianPasteImg",
-  { opts = { nargs = "?", complete = "file", desc = "Paste and image from the clipboard" } }
+  { opts = { nargs = "?", complete = "file", desc = "Paste an image from the clipboard" } }
 )
 
 M.register(
@@ -184,5 +188,7 @@ M.register(
 )
 
 M.register("ObsidianDebug", { opts = { nargs = 0, desc = "Log some information for debugging" } })
+
+M.register("ObsidianTOC", { opts = { nargs = 0, desc = "Load the table of contents into a picker" } })
 
 return M

@@ -86,6 +86,11 @@ _Keep in mind this plugin is not meant to replace Obsidian, but to complement it
 
 - `:ObsidianToggleCheckbox` to cycle through checkbox options.
 
+- `:ObsidianNewFromTemplate [TITLE]` to create a new note from a template in the templates folder. Selecting from a list using your preferred picker.
+  This command has one optional argument: the title of the new note.
+
+- `:ObsidianTOC` to load the table of contents of the current note into a picker list.
+
 ### Demo
 
 [![2024-01-31 14 22 52](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e)](https://github.com/epwalsh/obsidian.nvim/assets/8812459/2986e1d2-13e8-40e2-9c9e-75691a3b662e)
@@ -124,9 +129,10 @@ return {
   -- Replace the above line with this if you only want to load obsidian.nvim for markdown files in your vault:
   -- event = {
   --   -- If you want to use the home shortcut '~' here you need to call 'vim.fn.expand'.
-  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/**.md"
-  --   "BufReadPre path/to/my-vault/**.md",
-  --   "BufNewFile path/to/my-vault/**.md",
+  --   -- E.g. "BufReadPre " .. vim.fn.expand "~" .. "/my-vault/*.md"
+  --   -- refer to `:h file-pattern` for more examples
+  --   "BufReadPre path/to/my-vault/*.md",
+  --   "BufNewFile path/to/my-vault/*.md",
   -- },
   dependencies = {
     -- Required.
@@ -344,13 +350,6 @@ This is a complete list of all of the options that can be passed to `require("ob
   -- Either 'wiki' or 'markdown'.
   preferred_link_style = "wiki",
 
-  -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
-  ---@return string
-  image_name_func = function()
-    -- Prefix image names with timestamp.
-    return string.format("%s-", os.time())
-  end,
-
   -- Optional, boolean or a function that takes a filename and returns a boolean.
   -- `true` indicates that you don't want obsidian.nvim to manage frontmatter.
   disable_frontmatter = false,
@@ -392,6 +391,17 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- Open the URL in the default web browser.
     vim.fn.jobstart({"open", url})  -- Mac OS
     -- vim.fn.jobstart({"xdg-open", url})  -- linux
+    -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
+    -- vim.ui.open(url) -- need Neovim 0.10.0+
+  end,
+
+  -- Optional, by default when you use `:ObsidianFollowLink` on a link to an image
+  -- file it will be ignored but you can customize this behavior here.
+  ---@param img string
+  follow_img_func = function(img)
+    vim.fn.jobstart { "qlmanage", "-p", img }  -- Mac OS quick look preview
+    -- vim.fn.jobstart({"xdg-open", url})  -- linux
+    -- vim.cmd(':silent exec "!start ' .. url .. '"') -- Windows
   end,
 
   -- Optional, set to true if you use the Obsidian Advanced URI plugin.
@@ -406,11 +416,17 @@ This is a complete list of all of the options that can be passed to `require("ob
     name = "telescope.nvim",
     -- Optional, configure key mappings for the picker. These are the defaults.
     -- Not all pickers support all mappings.
-    mappings = {
+    note_mappings = {
       -- Create a new note from your query.
       new = "<C-x>",
       -- Insert a link to the selected note.
       insert_link = "<C-l>",
+    },
+    tag_mappings = {
+      -- Add tag(s) to current note.
+      tag_note = "<C-x>",
+      -- Insert a tag at the current location.
+      insert_tag = "<C-l>",
     },
   },
 
@@ -507,6 +523,14 @@ This is a complete list of all of the options that can be passed to `require("ob
     -- If this is a relative path it will be interpreted as relative to the vault root.
     -- You can always override this per image by passing a full path to the command instead of just a filename.
     img_folder = "assets/imgs",  -- This is the default
+
+    -- Optional, customize the default name or prefix when pasting images via `:ObsidianPasteImg`.
+    ---@return string
+    img_name_func = function()
+      -- Prefix image names with timestamp.
+      return string.format("%s-", os.time())
+    end,
+
     -- A function that determines the text to insert in the note when pasting an image.
     -- It takes two arguments, the `obsidian.Client` and an `obsidian.Path` to the image file.
     -- This is the default implementation.
@@ -653,8 +677,9 @@ mappings = {
 
 ### Using templates
 
-To insert a template, run the command `:ObsidianTemplate`. This will open a list of available templates in your templates folder with your preferred picker. Select a template and hit `<CR>` to insert. Substitutions for `{{id}}`, `{{title}}`, `{{path}}`, `{{date}}`, and `{{time}}` are supported out-of-the-box.
-
+To insert a template in the current note, run the command `:ObsidianTemplate`. This will open a list of available templates in your templates folder with your preferred picker. Select a template and hit `<CR>` to insert.
+To create a new note from a template, run the command `:ObsidianNewFromTemplate`. This will prompt you for an optional path for the new note and will open a list of available templates in your templates folder with your preferred picker. Select a template and hit `<CR>` to create the new note with the selected template.
+Substitutions for `{{id}}`, `{{title}}`, `{{path}}`, `{{date}}`, and `{{time}}` are supported out-of-the-box.
 For example, with the following configuration
 
 ```lua

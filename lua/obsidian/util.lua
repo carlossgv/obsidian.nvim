@@ -16,7 +16,7 @@ local util = {}
 ---@return boolean
 util.tbl_contains = function(table, val)
   for i = 1, #table do
-    if table[i] == val then
+    if vim.deep_equal(table[i], val) then
       return true
     end
   end
@@ -191,6 +191,15 @@ util.is_url = function(s)
   else
     return false
   end
+end
+
+util.is_img = function(s)
+  for _, suffix in ipairs { ".png", ".jpg", ".jpeg", ".heic", ".gif", ".svg", ".ico" } do
+    if vim.endswith(s, suffix) then
+      return true
+    end
+  end
+  return false
 end
 
 -- This function removes a single backslash within double square brackets
